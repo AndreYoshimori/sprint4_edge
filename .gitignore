@@ -1,0 +1,19 @@
+# Arquivos temporários do Arduino IDE
+*.hex
+*.elf
+*.bin
+
+# Configurações locais
+*.user
+*.workspace
+*.vscode/
+
+# Logs e caches
+*.log
+__pycache__/
+node_modules/
+*.tmp
+
+# Arquivos temporários do sistema
+.DS_Store
+Thumbs.db

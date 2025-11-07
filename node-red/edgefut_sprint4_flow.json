@@ -1,0 +1,229 @@
+[
+    {
+        "id": "tab1",
+        "type": "tab",
+        "label": "EdgeFut Sprint 4",
+        "disabled": false
+    },
+    {
+        "id": "serial-in",
+        "type": "serial in",
+        "z": "tab1",
+        "name": "Arduino UNO",
+        "serial": "bbb7ab4984f68b7e",
+        "x": 120,
+        "y": 120,
+        "wires": [
+            [
+                "fn-parse"
+            ]
+        ]
+    },
+    {
+        "id": "fn-parse",
+        "type": "function",
+        "z": "tab1",
+        "name": "Parse linha → objeto",
+        "func": "// Exemplo de linha:\n// [#3] categoria=MEDIO | g_pico=2.46 g | duracao=860 ms | cont(fraco/medio/forte)=0/3/0\n\nconst line = (msg.payload || \"\").toString();\n\nfunction ext(re, s) { const m = re.exec(s); return m ? m[1] : null; }\n\nconst nStr   = ext(/\\[#(\\d+)\\]/, line);\nconst cat    = ext(/categoria=([A-ZÇÃO]+)/, line) || \"DESCONHECIDO\";\nconst gStr   = ext(/g_pico=([\\d.]+)/, line);\nconst durStr = ext(/duracao=(\\d+)/, line);\nconst cont   = ext(/cont\\(fraco\\/medio\\/forte\\)=(\\d+)\\/(\\d+)\\/(\\d+)/, line);\n\nconst payload = {\n  g_pico: gStr ? parseFloat(gStr) : null,\n  duracao_ms: durStr ? parseInt(durStr) : null,\n  categoria: cat,\n  chute_forte: cat === \"FORTE\",\n  bolas_na_trave: nStr ? parseInt(nStr) : null,\n  contagem_fracos:  cont ? parseInt(cont[1]) : null,\n  contagem_medios:  cont ? parseInt(cont[2]) : null,\n  contagem_fortes:  cont ? parseInt(cont[3]) : null\n};\n\nmsg.payload = payload;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 340,
+        "y": 120,
+        "wires": [
+            [
+                "dbg",
+                "json",
+                "gauge",
+                "chart",
+                "text",
+                "mqtt-out"
+            ]
+        ]
+    },
+    {
+        "id": "dbg",
+        "type": "debug",
+        "z": "tab1",
+        "name": "Debug objeto",
+        "active": true,
+        "tosidebar": true,
+        "complete": "payload",
+        "targetType": "msg",
+        "x": 610,
+        "y": 60,
+        "wires": []
+    },
+    {
+        "id": "json",
+        "type": "json",
+        "z": "tab1",
+        "name": "obj → string JSON",
+        "property": "payload",
+        "action": "str",
+        "pretty": false,
+        "x": 590,
+        "y": 160,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "mqtt-out",
+        "type": "mqtt out",
+        "z": "tab1",
+        "name": "Publicar no MQTT",
+        "topic": "campo/trave/impacto",
+        "qos": "0",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "6605a6b2ef5f192d",
+        "x": 870,
+        "y": 120,
+        "wires": []
+    },
+    {
+        "id": "gauge",
+        "type": "ui_gauge",
+        "z": "tab1",
+        "name": "Pico de Aceleração (g)",
+        "group": "ui-group",
+        "order": 1,
+        "width": 6,
+        "height": 3,
+        "gtype": "gage",
+        "title": "g_pico (força do chute)",
+        "label": "g",
+        "format": "{{msg.payload.g_pico}}",
+        "min": 0,
+        "max": "5",
+        "x": 640,
+        "y": 200,
+        "wires": []
+    },
+    {
+        "id": "chart",
+        "type": "ui_chart",
+        "z": "tab1",
+        "name": "Histórico g_pico",
+        "group": "ui-group",
+        "order": 2,
+        "width": 12,
+        "height": 4,
+        "label": "Histórico de Impactos (g_pico)",
+        "chartType": "line",
+        "legend": "false",
+        "xformat": "HH:mm:ss",
+        "interpolate": "linear",
+        "nodata": "Sem dados",
+        "removeOlder": "1",
+        "removeOlderPoints": "100",
+        "removeOlderUnit": "3600",
+        "colors": [
+            "#1f77b4",
+            "#ff7f0e",
+            "#2ca02c"
+        ],
+        "outputs": 1,
+        "x": 640,
+        "y": 260,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "text",
+        "type": "ui_text",
+        "z": "tab1",
+        "group": "ui-group",
+        "order": 3,
+        "width": 12,
+        "height": 1,
+        "name": "Categoria e contador",
+        "label": "Categoria: {{msg.payload.categoria}} | Bolas na trave: {{msg.payload.bolas_na_trave}}",
+        "x": 640,
+        "y": 320,
+        "wires": []
+    },
+    {
+        "id": "bbb7ab4984f68b7e",
+        "type": "serial-port",
+        "name": "",
+        "serialport": "COM4",
+        "serialbaud": "115200",
+        "databits": 8,
+        "parity": "none",
+        "stopbits": 1,
+        "waitfor": "",
+        "dtr": "none",
+        "rts": "none",
+        "cts": "none",
+        "dsr": "none",
+        "newline": "\\n",
+        "bin": "false",
+        "out": "char",
+        "addchar": "",
+        "responsetimeout": 10000
+    },
+    {
+        "id": "6605a6b2ef5f192d",
+        "type": "mqtt-broker",
+        "name": "",
+        "broker": "test.mosquitto.org",
+        "port": 1883,
+        "clientid": "",
+        "autoConnect": true,
+        "usetls": false,
+        "protocolVersion": 4,
+        "keepalive": 60,
+        "cleansession": true,
+        "autoUnsubscribe": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthRetain": "false",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeQos": "0",
+        "closeRetain": "false",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willRetain": "false",
+        "willPayload": "",
+        "willMsg": {},
+        "userProps": "",
+        "sessionExpiry": ""
+    },
+    {
+        "id": "ui-group",
+        "type": "ui_group",
+        "name": "Impactos",
+        "tab": "ui-tab",
+        "order": 1,
+        "disp": true,
+        "width": "12",
+        "collapse": false
+    },
+    {
+        "id": "ui-tab",
+        "type": "ui_tab",
+        "name": "EdgeFut",
+        "icon": "dashboard",
+        "disabled": false,
+        "hidden": false
+    },
+    {
+        "id": "afd4cb065d89e806",
+        "type": "global-config",
+        "env": [],
+        "modules": {
+            "node-red-node-serialport": "2.0.3",
+            "node-red-dashboard": "3.6.6"
+        }
+    }
+]
