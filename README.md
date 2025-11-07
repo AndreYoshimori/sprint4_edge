@@ -22,7 +22,7 @@ Arduino UNO + MPU6050 → **Serial** → **Node-RED (parse + dashboard)** → **
 flowchart LR
   A[Arduino UNO<br/>+ MPU6050] -->|Serial 115200| B[Node-RED<br/>Parse + Dashboard]
   B -->|MQTT<br/>campo/trave/impacto| C[test.mosquitto.org]
-  C --> D[(Aplicativo MQTT no celular)]
+  C --> D[(Aplicativo MQTT no celular)]```
 
 ---
 
